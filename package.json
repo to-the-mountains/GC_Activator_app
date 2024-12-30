@@ -18,7 +18,8 @@
     "express": "^4.19.2",
     "mssql": "^11.0.1",
     "react-transition-group": "^4.4.5",
-    "tough-cookie": "^5.0.0"
+    "tough-cookie": "^5.0.0",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "eslint": "^9.9.0"
