@@ -14,7 +14,6 @@ const config = {
 
 // Function to connect to the database
 const connectToDatabase = async () => {
-  console.log('HERE', process.env.DB_SERVER)
   try {
     await sql.connect(config);
     console.log('Connected to SQL Server');

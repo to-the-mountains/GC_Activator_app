@@ -6,7 +6,7 @@ const cors = require('cors');
 const { connectToDatabase } = require('./dbConfig');
 require('dotenv').config({ path: '.env.local' });
 
-const { fetchAuthToken, callSoapAPI, getUserList, getTourList } = require('./service');
+const { fetchAuthToken, verifyConnection, fundCard, getUserList, getTourList, checkUserByEmail, getFundingList } = require('./service');
 
 const app = express();
 app.use(express.json());
@@ -22,12 +22,22 @@ app.post('/fetchAuthToken', async (req, res) => {
   }
 });
 
-app.post('/callSoapAPI', async (req, res) => {
+app.post('/verifyConnection', async (req, res) => {
   try {
-    const data = await callSoapAPI(req.body);
+    const data = await verifyConnection(req.body);
     res.json(data);
   } catch (error) {
-    console.error('Error in /callSoapAPI route:', error.message);
+    console.error('Error in /verifyConnection route:', error.message);
+    res.status(500).json({ error: error.message || 'Failed to process request' });
+  }
+});
+
+app.post('/fundCard', async (req, res) => {
+  try {
+    const data = await fundCard(req.body);
+    res.json(data);
+  } catch (error) {
+    console.error('Error in /fundCard route:', error.message);
     res.status(500).json({ error: error.message || 'Failed to process request' });
   }
 });
@@ -59,6 +69,39 @@ app.post('/getTourList', async (req, res) => {
     res.status(500).json({ error: 'An error occurred' });
   }
 });
+
+app.post('/getFundingList', async (req, res) => {
+  try {
+    console.log('test1')
+    console.log('Request Body:', req.body); // Log the incoming request body
+
+    const { userName, date, showUnfunded, showFunded, showAllUnfunded, showZeroPurse, showVoidTrans } = req.body;
+
+    if (!userName || !date) {
+      return res.status(400).json({
+        error: "Missing 'userName' or 'date' in the request body.",
+      });
+    }
+
+    const data = await getFundingList({
+      userName,
+      date,
+      showUnfunded,
+      showFunded,
+      showAllUnfunded,
+      showZeroPurse,
+      showVoidTrans,
+    });
+
+    res.json(data);
+  } catch (err) {
+    console.error('Error in /getFundingList route:', err.message);
+    res.status(500).json({ error: 'An error occurred' });
+  }
+});
+
+
+
 
 // const privateKey = fs.readFileSync('C:/Users/ryantaylor/.vscode/projects/Affinity/certs/privateKey.pem', 'utf8');
 // const certificate = fs.readFileSync('C:/Users/ryantaylor/.vscode/projects/Affinity/certs/certificate.pem', 'utf8');

@@ -31,7 +31,7 @@ const fetchAuthToken = async () => {
   }
 };
 
-const callSoapAPI = async (data) => {
+const verifyConnection = async (data) => {
   try {
     const accessToken = await fetchAuthToken();
     const soapUrl = `${apiURL}/FSVRemote/v1/fsvremote`;
@@ -48,6 +48,40 @@ const callSoapAPI = async (data) => {
               <userid>${process.env.USER_ID}</userid>
               <password>${process.env.PASSWORD}</password>
               <paramstr><![CDATA[${data.certCard},${data.passcode},${data.transaction},${data.transactionString}]]></paramstr>
+            </Transact>
+          </soap:Body>
+        </soap:Envelope>
+      `;
+
+    const response = await axios.post(soapUrl, soapBody, { headers });
+
+    const parsed = await parseStringPromise(response.data, { trim: true, explicitArray: false });
+
+    const result = parsed['soap:Envelope']['soap:Body']['TransactResponse']['TransactResult'];
+    return result;
+  } catch (error) {
+    console.error('Error in SOAP call:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+const fundCard = async (data) => {
+  try {
+    const accessToken = await fetchAuthToken();
+    const soapUrl = `${apiURL}/FSVRemote/v1/fsvremote`;
+    const headers = {
+      'Content-Type': 'text/xml; charset=utf-8',
+      'SOAPAction': 'http://FSVWebServices/FSVRemote/Transact',
+      Authorization: `Bearer ${accessToken}`,
+    };
+
+    const soapBody = `
+        <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <Transact xmlns="http://FSVWebServices/FSVRemote/">
+              <userid>${process.env.USER_ID}</userid>
+              <password>${process.env.PASSWORD}</password>
+              <paramstr><![CDATA[${data.nbFundingCardID},${data.nbFundingCardPassCode},${data.nbTransID},${data.nbFundingCardID},${data.nbFundingCardPassCode},${data.nbATTMID_First},${data.nbATTMID_Last},${data.nbTotalCards},${data.nbTransferAmount},${data.nbTotalTransferAmount},${data.chContactLastName},${data.chContactFirstName},${data.chContactEmailAddress},${data.nbContactPhone},${data.Reserved1},${data.Reserved2},${data.Reserved3},${data.chFundingCardReference},${data.chToCardReference}]]></paramstr>
             </Transact>
           </soap:Body>
         </soap:Envelope>
@@ -97,9 +131,76 @@ const getTourList = async (username, date, locationID) => {
   }
 };
 
+const getFundingList = async ({ userName, date, showUnfunded, showFunded, showAllUnfunded, showZeroPurse, showVoidTrans }) => {
+  try {
+    console.log('test2')
+    await connectToDatabase();
+
+    console.log('SQL Parameters:', {
+      userName,
+      date,
+      showUnfunded,
+      showFunded,
+      showAllUnfunded,
+      showZeroPurse,
+      showVoidTrans,
+    });
+
+    const request = new sql.Request();
+
+    request.input('UserName', sql.NVarChar(50), userName);
+    request.input('Date', sql.NVarChar(50), date);
+    request.input('ShowUnfunded', sql.Bit, showUnfunded ? 1 : 0);
+    request.input('ShowFunded', sql.Bit, showFunded ? 1 : 0);
+    request.input('ShowAllUnfunded', sql.Bit, showAllUnfunded ? 1 : 0);
+    request.input('ShowZeroPurse', sql.Bit, showZeroPurse ? 1 : 0);
+    request.input('ShowVoidTrans', sql.Bit, showVoidTrans ? 1 : 0);
+
+    const result = await request.execute('GetUserTransactionList');
+    console.log('SQL Result:', result.recordset);
+
+    return result.recordset;
+  } catch (err) {
+    console.error('Error executing GetFundingList:', err.message);
+    throw err;
+  }
+};
+
+
+
+
+/**
+ * Check user by email and return user details.
+ * @param {string} email
+ * @returns {Promise<object>}
+ */
+const checkUserByEmail = async (email) => {
+  try {
+    await connectToDatabase();
+
+    const query = `SELECT UserName FROM [dbo].[Users] WHERE Email = @Email AND Active = 1`;
+    const request = new sql.Request();
+    request.input('Email', sql.NVarChar, email);
+
+    const result = await request.query(query);
+
+    if (result.recordset.length === 0) {
+      return null; // No user found
+    }
+
+    return result.recordset[0]; // Return the first matching user
+  } catch (err) {
+    console.error('Error checking user by email:', err.message);
+    throw err;
+  }
+};
+
 module.exports = {
   fetchAuthToken,
-  callSoapAPI,
+  verifyConnection,
+  fundCard,
+  getFundingList,
   getUserList,
   getTourList,
+  checkUserByEmail
 };
