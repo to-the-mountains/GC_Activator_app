@@ -65,7 +65,7 @@ const verifyConnection = async (data) => {
   }
 };
 
-const fundCard = async (data) => {
+const fundCard = async (paramstr) => {
   try {
     const accessToken = await fetchAuthToken();
     const soapUrl = `${apiURL}/FSVRemote/v1/fsvremote`;
@@ -81,11 +81,13 @@ const fundCard = async (data) => {
             <Transact xmlns="http://FSVWebServices/FSVRemote/">
               <userid>${process.env.USER_ID}</userid>
               <password>${process.env.PASSWORD}</password>
-              <paramstr><![CDATA[${data.nbFundingCardID},${data.nbFundingCardPassCode},${data.nbTransID},${data.nbFundingCardID},${data.nbFundingCardPassCode},${data.nbATTMID_First},${data.nbATTMID_Last},${data.nbTotalCards},${data.nbTransferAmount},${data.nbTotalTransferAmount},${data.chContactLastName},${data.chContactFirstName},${data.chContactEmailAddress},${data.nbContactPhone},${data.Reserved1},${data.Reserved2},${data.Reserved3},${data.chFundingCardReference},${data.chToCardReference}]]></paramstr>
+              <paramstr><![CDATA[${paramstr}]]></paramstr>
             </Transact>
           </soap:Body>
         </soap:Envelope>
       `;
+
+      console.log("test",soapBody)
 
     const response = await axios.post(soapUrl, soapBody, { headers });
 

@@ -32,16 +32,6 @@ app.post('/verifyConnection', async (req, res) => {
   }
 });
 
-app.post('/fundCard', async (req, res) => {
-  try {
-    const data = await fundCard(req.body);
-    res.json(data);
-  } catch (error) {
-    console.error('Error in /fundCard route:', error.message);
-    res.status(500).json({ error: error.message || 'Failed to process request' });
-  }
-});
-
 app.get('/getUserList', async (req, res) => {
   try {
     const data = await getUserList();
@@ -66,6 +56,18 @@ app.post('/getTourList', async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error('Error in /getTourList route:', err.message);
+    res.status(500).json({ error: 'An error occurred' });
+  }
+});
+
+app.post('/check-user', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const data = await checkUserByEmail(email);
+    res.json(data);
+  } catch (err) {
+    console.error('Error in /check-user route:', err.message);
     res.status(500).json({ error: 'An error occurred' });
   }
 });
@@ -100,6 +102,29 @@ app.post('/getFundingList', async (req, res) => {
   }
 });
 
+app.post('/fundCard', async (req, res) => {
+  try {
+    const data = req.body
+    const paramstr = `${process.env.nbFundingCardID},${process.env.nbFundingCardPassCode},3464,${process.env.nbFundingCardID},${process.env.nbFundingCardPassCode},${data.nbATTMID},${data.nbATTMID},1,${data.nbTransferAmount},${data.nbTransferAmount},Activator,GiftCard,gcactivationnotice@massresort.com,9545561300,R,R,R,Reference,Reference`
+    const result = await fundCard(paramstr);
+    res.json(result);
+  } catch (error) {
+    console.error('Error in /fundCard route:', error.message);
+    res.status(500).json({ error: error.message || 'Failed to process request' });
+  }
+});
+
+app.post('/voidCard', async (req, res) => {
+  try {
+    const data = req.body
+    const paramstr = `${process.env.nbFundingCardID},${process.env.nbFundingCardPassCode},3461,${process.env.nbFundingCardID},${process.env.nbFundingCardPassCode},${data.nbATTMID},${data.nbTransferAmount},R,R,R,Reference,Reference`
+    const result = await fundCard(paramstr);
+    res.json(result);
+  } catch (error) {
+    console.error('Error in /voidCard route:', error.message);
+    res.status(500).json({ error: error.message || 'Failed to process request' });
+  }
+});
 
 
 
