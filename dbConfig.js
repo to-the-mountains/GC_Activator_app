@@ -2,10 +2,10 @@ require('dotenv').config();
 const sql = require('mssql');
 
 const config = {
-  user: "sa",
-  password: "%+eXe5qkzwd>^?31Ck?D",
-  server: "192.168.216.99",
-  database: "GC_Activator_Dev",
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  server: process.env.DB_SERVER,
+  database: process.env.DB_DATABASE,
   options: {
     encrypt: true, // Use encryption for data
     trustServerCertificate: true, // Set to true if using self-signed certificates

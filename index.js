@@ -156,20 +156,20 @@ app.post('/getTransactions', async (req, res) => {
 });
 
 
-// const privateKey = fs.readFileSync('C:/Users/ryantaylor/.vscode/projects/Affinity/certs/privateKey.pem', 'utf8');
-// const certificate = fs.readFileSync('C:/Users/ryantaylor/.vscode/projects/Affinity/certs/certificate.pem', 'utf8');
-// const credentials = { key: privateKey, cert: certificate };
-
-// connectToDatabase().then(() => {
-//   const httpsServer = https.createServer(credentials, app);
-//   httpsServer.listen(3001, '0.0.0.0', () => {
-//     console.log('HTTPS Server running on port 3001');
-//   });
-// });
+const privateKey = fs.readFileSync('C:/Users/ryantaylor/.vscode/projects/Affinity/certs/privateKey.pem', 'utf8');
+const certificate = fs.readFileSync('C:/Users/ryantaylor/.vscode/projects/Affinity/certs/certificate.pem', 'utf8');
+const credentials = { key: privateKey, cert: certificate };
 
 connectToDatabase().then(() => {
-  const httpServer = http.createServer(app);
-  httpServer.listen(3001, '0.0.0.0', () => {
-    console.log('HTTP Server running on port 3001');
+  const httpsServer = https.createServer(credentials, app);
+  httpsServer.listen(3001, '0.0.0.0', () => {
+    console.log('HTTPS Server running on port 3001');
   });
 });
+
+// connectToDatabase().then(() => {
+//   const httpServer = http.createServer(app);
+//   httpServer.listen(3001, '0.0.0.0', () => {
+//     console.log('HTTP Server running on port 3001');
+//   });
+// });
