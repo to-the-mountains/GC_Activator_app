@@ -4,7 +4,7 @@ const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const { connectToDatabase } = require('./dbConfig');
-require('dotenv').config({ path: '.env.local' });
+require('dotenv').config();
 
 const { fetchAuthToken, verifyConnection, fundCard, getUserList, getTourList, checkUserByEmail, getFundingList, getTransactions, updateLocation } = require('./service');
 
@@ -156,8 +156,8 @@ app.post('/getTransactions', async (req, res) => {
 });
 
 
-const privateKey = fs.readFileSync('C:/Users/ryantaylor/.vscode/projects/Affinity/certs/privateKey.pem', 'utf8');
-const certificate = fs.readFileSync('C:/Users/ryantaylor/.vscode/projects/Affinity/certs/certificate.pem', 'utf8');
+const privateKey = fs.readFileSync(process.env.KEY_PATH, 'utf8');
+const certificate = fs.readFileSync(process.env.CERT_PATH, 'utf8');
 const credentials = { key: privateKey, cert: certificate };
 
 connectToDatabase().then(() => {
