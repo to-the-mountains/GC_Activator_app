@@ -6,7 +6,7 @@ const cors = require('cors');
 const { connectToDatabase } = require('./dbConfig');
 require('dotenv').config({ path: '.env.local' });
 
-const { fetchAuthToken, verifyConnection, fundCard, getUserList, getTourList, checkUserByEmail, getFundingList } = require('./service');
+const { fetchAuthToken, verifyConnection, fundCard, getUserList, getTourList, checkUserByEmail, getFundingList, getTransactions, updateLocation } = require('./service');
 
 const app = express();
 app.use(express.json());
@@ -74,9 +74,6 @@ app.post('/check-user', async (req, res) => {
 
 app.post('/getFundingList', async (req, res) => {
   try {
-    console.log('test1')
-    console.log('Request Body:', req.body); // Log the incoming request body
-
     const { userName, date, showUnfunded, showFunded, showAllUnfunded, showZeroPurse, showVoidTrans } = req.body;
 
     if (!userName || !date) {
@@ -126,6 +123,37 @@ app.post('/voidCard', async (req, res) => {
   }
 });
 
+app.post('/updateLocation', async (req, res) => {
+  try {
+    const { username, location } = req.body;
+
+    if (!location) {
+      return res.status(400).json({ error: "'Location' is required." });
+    }
+
+    const data = await updateLocation({ username, location });
+    res.json(data);
+  } catch (err) {
+    console.error('Error in /updateLocation route:', err.message);
+    res.status(500).json({ error: 'An error occurred while updating the location.' });
+  }
+});
+
+app.post('/getTransactions', async (req, res) => {
+  console.log('got here',req.body)
+  try {
+    const { gc } = req.body;
+
+    if (!gc) {
+      return res.status(400).json({ error: "'GC Number' is required." });
+    }
+    const data = await getTransactions(gc);
+    res.json(data);
+  } catch (err) {
+    console.error('Error in /getTransactions route:', err.message);
+    res.status(500).json({ error: 'An error occurred while retrieving the transactions.' });
+  }
+});
 
 
 // const privateKey = fs.readFileSync('C:/Users/ryantaylor/.vscode/projects/Affinity/certs/privateKey.pem', 'utf8');
