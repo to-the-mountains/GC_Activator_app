@@ -6,7 +6,7 @@ const cors = require('cors');
 const { connectToDatabase } = require('./dbConfig');
 require('dotenv').config();
 
-const { fetchAuthToken, verifyConnection, fundCard, getUserList, getTourList, checkUserByEmail, getFundingList, getTransactions, updateLocation } = require('./service');
+const { fetchAuthToken, verifyConnection, fundCard, getUserList, getTourList, checkUserByEmail, getFundingList, getTransactions, updateLocation, logTransactions } = require('./service');
 
 const app = express();
 app.use(express.json());
@@ -74,7 +74,7 @@ app.post('/check-user', async (req, res) => {
 
 app.post('/getFundingList', async (req, res) => {
   try {
-    const { userName, date, showUnfunded, showFunded, showAllUnfunded, showZeroPurse, showVoidTrans } = req.body;
+    const { userName, date } = req.body;
 
     if (!userName || !date) {
       return res.status(400).json({
@@ -84,12 +84,7 @@ app.post('/getFundingList', async (req, res) => {
 
     const data = await getFundingList({
       userName,
-      date,
-      showUnfunded,
-      showFunded,
-      showAllUnfunded,
-      showZeroPurse,
-      showVoidTrans,
+      date
     });
 
     res.json(data);
@@ -128,7 +123,7 @@ app.post('/updateLocation', async (req, res) => {
     const { username, location } = req.body;
 
     if (!location) {
-      return res.status(400).json({ error: "'Location' is required." });
+      return res.status(400).json({ error: "Location' is required." });
     }
 
     const data = await updateLocation({ username, location });
@@ -140,7 +135,6 @@ app.post('/updateLocation', async (req, res) => {
 });
 
 app.post('/getTransactions', async (req, res) => {
-  console.log('got here',req.body)
   try {
     const { gc } = req.body;
 
@@ -152,6 +146,16 @@ app.post('/getTransactions', async (req, res) => {
   } catch (err) {
     console.error('Error in /getTransactions route:', err.message);
     res.status(500).json({ error: 'An error occurred while retrieving the transactions.' });
+  }
+});
+
+app.post('/logTransactions', async (req, res) => {
+  try {
+    const data = await logTransactions(req.body.data);
+    res.json(data);
+  } catch (err) {
+    console.error('Error in /logTransactions route:', err.message);
+    res.status(500).json({ error: 'An error occurred while posting the data.' });
   }
 });
 
