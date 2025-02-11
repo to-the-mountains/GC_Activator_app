@@ -295,11 +295,40 @@ const getTransactions = async (gc) => {
   }
 };
 
-const logTransactions = async (data) => {
+const getFundedAmount = async (gc) => {
   try {
     await connectToDatabase();
+    let query = '';
+    if(gc.includes('*'))
+    {
+      const number = gc.replace(/\D/g, '');
+      query = `SELECT * 
+      FROM [GC_Activator].[dbo].[Transactions] 
+      WHERE GC_Number LIKE '%${number}%'
+      AND TransType = 'AddFunds'
+      AND Response_Code = '1'`
+    }
+    else{
+      query = `SELECT * FROM [GC_Activator].[dbo].[Transactions] WHERE GC_Number = @GC_Number AND TransType = 'AddFunds' AND Response_Code = '1'`;
+    }
+    const request = new sql.Request();
+    request.input('GC_Number', sql.NVarChar, gc);
 
-    console.log(data)
+    const result = await request.query(query);
+
+    if (result.recordset.length === 0) {
+      return null; // No transactions found
+    }
+    return result.recordset; // Return all matching transactions
+  } catch (err) {
+    console.error('Error retrieving transaction list:', err.message);
+    throw err;
+  }
+};
+
+const logFundTransactions = async (data) => {
+  try {
+    await connectToDatabase();
 
     // Create SQL request object for the first transaction
     let request = new sql.Request();
@@ -335,7 +364,7 @@ const logTransactions = async (data) => {
     // Insert "AddFunds" transaction
     request.input('GC_Number', sql.NVarChar, data.gcNumber);
     request.input('Amount', sql.Decimal(10, 2), data.amount);
-    request.input('Location', sql.NVarChar, data.location);
+    request.input('Location', sql.NVarChar, data.locationId);
     request.input('Premium', sql.Decimal(10, 2), data.premium);
     request.input('Refund', sql.Decimal(10, 2), data.refund);
     request.input('Customer', sql.NVarChar, data.customer);
@@ -344,6 +373,45 @@ const logTransactions = async (data) => {
     request.input('Balance', sql.Decimal(10, 2), data.amount);
     request.input('Status', sql.NVarChar, 'Funded');
     request.input('TransType', sql.NVarChar, 'AddFunds');
+    request.input('Request', sql.NVarChar, data.request);
+    request.input('Response', sql.NVarChar, data.response);
+    request.input('Response_Code', sql.NVarChar, data.responseCode);
+    request.input('Response_Desc', sql.NVarChar, data.responseDesc);
+    request.input('CreatedBy', sql.NVarChar, data.createdBy);
+
+    await request.query(`
+      INSERT INTO [GC_Activator].[dbo].[Transactions] 
+      (GC_Number, Amount, Location, Premium, Refund, Customer, Tour_id, Sub_Program, Balance, Status, TransType, Request, Response, Response_Code, Response_Desc, CreatedBy, CreateDate)
+      VALUES 
+      (@GC_Number, @Amount, @Location, @Premium, @Refund, @Customer, @Tour_id, @Sub_Program, @Balance, @Status, @TransType, @Request, @Response, @Response_Code, @Response_Desc, @CreatedBy, GETDATE())
+    `);
+
+    return { success: true, message: 'Transactions created successfully' };
+  } catch (err) {
+    console.error('Error inserting transactions:', err.message);
+    throw err;
+  }
+};
+
+const logVoidTransactions = async (data) => {
+  try {
+    await connectToDatabase();
+
+    // Create SQL request object for the first transaction
+    let request = new sql.Request();
+
+    // Insert "VoidTrans" transaction
+    request.input('GC_Number', sql.NVarChar, data.gcNumber);
+    request.input('Amount', sql.Decimal(10, 2), data.amount);
+    request.input('Location', sql.NVarChar, data.locationId);
+    request.input('Premium', sql.Decimal(10, 2), data.premium);
+    request.input('Refund', sql.Decimal(10, 2), data.refund);
+    request.input('Customer', sql.NVarChar, data.customer);
+    request.input('Tour_id', sql.Int, data.tourId);
+    request.input('Sub_Program', sql.NVarChar, data.subProgram);
+    request.input('Balance', sql.Decimal(10, 2), 0);
+    request.input('Status', sql.NVarChar, 'Voided');
+    request.input('TransType', sql.NVarChar, 'VoidTrans');
     request.input('Request', sql.NVarChar, data.request);
     request.input('Response', sql.NVarChar, data.response);
     request.input('Response_Code', sql.NVarChar, data.responseCode);
@@ -377,5 +445,7 @@ module.exports = {
   checkUserByEmail,
   getTransactions,
   updateLocation,
-  logTransactions
+  logFundTransactions,
+  logVoidTransactions,
+  getFundedAmount
 };

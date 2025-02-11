@@ -6,7 +6,7 @@ const cors = require('cors');
 const { connectToDatabase } = require('./dbConfig');
 require('dotenv').config();
 
-const { fetchAuthToken, verifyConnection, fundCard, getUserList, getTourList, checkUserByEmail, getFundingList, getTransactions, updateLocation, logTransactions } = require('./service');
+const { fetchAuthToken, verifyConnection, fundCard, getUserList, getTourList, checkUserByEmail, getFundingList, getTransactions, updateLocation, logFundTransactions, getFundedAmount, logVoidTransactions } = require('./service');
 
 const app = express();
 app.use(express.json());
@@ -109,7 +109,7 @@ app.post('/fundCard', async (req, res) => {
 app.post('/voidCard', async (req, res) => {
   try {
     const data = req.body
-    const paramstr = `${process.env.nbFundingCardID},${process.env.nbFundingCardPassCode},3461,${process.env.nbFundingCardID},${process.env.nbFundingCardPassCode},${data.nbATTMID},${data.nbTransferAmount},R,R,R,Reference,Reference`
+    const paramstr = `${process.env.nbFundingCardID},${process.env.nbFundingCardPassCode},3461,${process.env.nbFundingCardID},${process.env.nbFundingCardPassCode},${data.nbCHCardID},${data.nbTransferAmount},R,R,R,Reference,Reference`
     const result = await fundCard(paramstr);
     res.json(result);
   } catch (error) {
@@ -134,6 +134,21 @@ app.post('/updateLocation', async (req, res) => {
   }
 });
 
+app.post('/getFundedAmount', async (req, res) => {
+  try {
+    const { gc } = req.body;
+
+    if (!gc) {
+      return res.status(400).json({ error: "'GC Number' is required." });
+    }
+    const data = await getFundedAmount(gc);
+    res.json(data);
+  } catch (err) {
+    console.error('Error in /getFundedAmount route:', err.message);
+    res.status(500).json({ error: 'An error occurred while retrieving the funded amount.' });
+  }
+});
+
 app.post('/getTransactions', async (req, res) => {
   try {
     const { gc } = req.body;
@@ -149,12 +164,22 @@ app.post('/getTransactions', async (req, res) => {
   }
 });
 
-app.post('/logTransactions', async (req, res) => {
+app.post('/logFundTransactions', async (req, res) => {
   try {
-    const data = await logTransactions(req.body.data);
+    const data = await logFundTransactions(req.body.data);
     res.json(data);
   } catch (err) {
-    console.error('Error in /logTransactions route:', err.message);
+    console.error('Error in /logFundTransactions route:', err.message);
+    res.status(500).json({ error: 'An error occurred while posting the data.' });
+  }
+});
+
+app.post('/logVoidTransactions', async (req, res) => {
+  try {
+    const data = await logVoidTransactions(req.body.data);
+    res.json(data);
+  } catch (err) {
+    console.error('Error in /logVoidTransactions route:', err.message);
     res.status(500).json({ error: 'An error occurred while posting the data.' });
   }
 });
