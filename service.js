@@ -336,7 +336,7 @@ const logFundTransactions = async (data) => {
     // Insert "Create" transaction
     request.input('GC_Number', sql.NVarChar, data.gcNumber);
     request.input('Amount', sql.Decimal(10, 2), data.amount);
-    request.input('Location', sql.NVarChar, data.location);
+    request.input('Location', sql.NVarChar, data.locationId);
     request.input('Premium', sql.Decimal(10, 2), data.premium);
     request.input('Refund', sql.Decimal(10, 2), data.refund);
     request.input('Customer', sql.NVarChar, data.customer);
@@ -424,7 +424,7 @@ const logVoidTransactions = async (data) => {
       VALUES 
       (@GC_Number, @Amount, @Location, @Premium, @Refund, @Customer, @Tour_id, @Sub_Program, @Balance, @Status, @TransType, @Request, @Response, @Response_Code, @Response_Desc, @CreatedBy, GETDATE())
     `);
-
+    
     return { success: true, message: 'Transactions created successfully' };
   } catch (err) {
     console.error('Error inserting transactions:', err.message);
