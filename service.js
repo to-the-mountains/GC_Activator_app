@@ -432,7 +432,43 @@ const logVoidTransactions = async (data) => {
   }
 };
 
+const addUser = async (userData) => {
+  try {
+    await connectToDatabase();
 
+    const request = new sql.Request();
+
+    // Get the next available ID
+    const idQuery = `SELECT ISNULL(MAX(ID), 0) + 1 AS NextID FROM Users;`;
+    const idResult = await request.query(idQuery);
+    const nextId = idResult.recordset[0].NextID;
+
+    request.input('ID', sql.Int, nextId);
+    request.input('UserName', sql.NVarChar(50), userData.username);
+    request.input('FirstName', sql.NVarChar(50), userData.firstname);
+    request.input('LastName', sql.NVarChar(50), userData.lastname);
+    request.input('Email', sql.NVarChar(100), userData.email);
+    request.input('Phone', sql.NVarChar(20), userData.phone);
+    request.input('Role', sql.NVarChar(50), userData.role);
+    request.input('Location', sql.NVarChar(50), userData.location);
+    request.input('Active', sql.Bit, 1);
+
+    const query = `
+      INSERT INTO Users (UserID, UserName, FirstName, LastName, Email, Phone, Role, Location, Active)
+      VALUES (@ID, @UserName, @FirstName, @LastName, @Email, @Phone, @Role, @Location, @Active);
+    `;
+
+    await request.query(query);
+
+    return {
+      message: 'User added successfully',
+      userId: nextId
+    };
+  } catch (err) {
+    console.error('Error adding user:', err.message);
+    throw err;
+  }
+};
 
 module.exports = {
   fetchAuthToken,
@@ -447,5 +483,6 @@ module.exports = {
   updateLocation,
   logFundTransactions,
   logVoidTransactions,
-  getFundedAmount
+  getFundedAmount,
+  addUser
 };

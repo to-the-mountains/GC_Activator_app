@@ -6,7 +6,7 @@ const cors = require('cors');
 const { connectToDatabase } = require('./dbConfig');
 require('dotenv').config();
 
-const { fetchAuthToken, verifyConnection, fundCard, getUserList, getTourList, checkUserByEmail, getFundingList, getTransactions, updateLocation, logFundTransactions, getFundedAmount, logVoidTransactions } = require('./service');
+const { fetchAuthToken, verifyConnection, fundCard, getUserList, getTourList, checkUserByEmail, getFundingList, getTransactions, updateLocation, logFundTransactions, getFundedAmount, logVoidTransactions, addUser } = require('./service');
 
 const app = express();
 app.use(express.json());
@@ -181,6 +181,24 @@ app.post('/logVoidTransactions', async (req, res) => {
   } catch (err) {
     console.error('Error in /logVoidTransactions route:', err.message);
     res.status(500).json({ error: 'An error occurred while posting the data.' });
+  }
+});
+
+app.post('/addUser', async (req, res) => {
+  try {
+    const { username, firstname, lastname, email, phone, role, location } = req.body;
+
+    if (!username || !firstname || !lastname || !email || !phone || !role || !location) {
+      return res.status(400).json({ error: 'All fields are required: firstName, lastName, email, phone, role, location' });
+    }
+
+    const userData = { username, firstname, lastname, email, phone, role, location };
+    const result = await addUser(userData);
+
+    res.json(result);
+  } catch (err) {
+    console.error('Error in /addUser route:', err.message);
+    res.status(500).json({ error: 'Failed to add user' });
   }
 });
 
